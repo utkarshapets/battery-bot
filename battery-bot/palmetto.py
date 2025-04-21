@@ -1,3 +1,4 @@
+import pandas as pd
 import requests
 import os
 import json
@@ -7,7 +8,15 @@ PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
-def get_palmetto_data(address: str, granularity = "hour") -> Dict[str, Any]:
+def get_palmetto_data(
+        address: str,
+        granularity = "hour",
+        solar_size_kw = 0.0,
+        batt_size_kwh = 0.0,
+        ev_charging_present = False,
+        hvac_heat_pump_present = False,
+        hvac_heating_capacity = 0.0
+    ) -> Dict[str, Any]:
     """
     Get solar data from Palmetto API for a given address
     
@@ -33,14 +42,63 @@ def get_palmetto_data(address: str, granularity = "hour") -> Dict[str, Any]:
             "to_datetime": "2025-04-01T00:00:00",
             "variables": [
                 "consumption.electricity",
-                "consumption.electricity.plug_loads",
-                "emissions.electricity"
+                "grid.electricity.import",
             ],
             "group_by": granularity
         },
         "location": {
             "address": address
-        }
+        },
+        "consumption": {
+            "attributes": {
+                "hypothetical": [
+                    {
+                        "name": "ev_charging",
+                        "value": ev_charging_present
+                    },
+                    {
+                        "name": "ev_charging_strategy",
+                        "value": "delayed_by_departure"
+                    },
+                    {
+                        "name": "hvac_heat_pump",
+                        "value": hvac_heat_pump_present
+                    },
+                    {
+                        "name": "hvac_heating_capacity",
+                        "value": hvac_heating_capacity
+                    }
+                ]
+            }
+        },
+        "production": {
+            "attributes": {
+                "hypothetical": [
+                    {
+                        "name": "panel_arrays",
+                        "value": [
+                            {
+                                "capacity": solar_size_kw
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "storage": {
+            "attributes": {
+                "hypothetical": [
+                    {
+                        "name": "capacity",
+                        "value": batt_size_kwh
+                    },
+                    {
+                        "name": "dispatch_strategy",
+                        "value": "self_consumption"
+                    }
+                ]
+            }
+        },
     }
     
     try:
@@ -50,8 +108,10 @@ def get_palmetto_data(address: str, granularity = "hour") -> Dict[str, Any]:
         # Print the response for debugging
         print("Palmetto API Response:")
         print(json.dumps(response.json(), indent=2))
-        
-        return response.json()
+        response_json = response.json()
+        data = response_json['data']
+        interval_data = pd.DataFrame(data['intervals'])
+        return interval_data
     except requests.exceptions.RequestException as e:
         print(f"Error making request to Palmetto API: {e}")
         if hasattr(e, 'response') and e.response is not None:

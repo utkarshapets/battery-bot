@@ -22,11 +22,39 @@ customer_payload = {
     "parameters": {
         "from_datetime": "2024-04-01T00:00:00",
         "to_datetime": "2025-03-31T23:59:59",
-        "variables": ["consumption.electricity"],
+        "variables": ["consumption.electricity", "grid.electricity.import"],
         "group_by": "hour"
     },
     "location": {
         "address": "20 West 34th Street, New York, NY 10118"
+    },
+    "production": {
+        "attributes": {
+            "hypothetical": [
+                {
+                    "name": "panel_arrays",
+                    "value": [
+                        {
+                            "capacity": 10
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "storage": {
+        "attributes": {
+            "hypothetical": [
+                {
+                    "name": "capacity",
+                    "value": 10
+                },
+                {
+                    "name": "dispatch_strategy",
+                    "value": "self_consumption"
+                }
+            ]
+        }
     }
 }
 

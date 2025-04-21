@@ -9,15 +9,33 @@ from palmetto import get_palmetto_data
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
-def process_submission(address, solar_size_kw, batt_size_kwh, csv_file):
+def process_submission(
+        address,
+        solar_size_kw,
+        batt_size_kwh,
+        ev_charging_present,
+        hvac_heat_pump_present,
+        hvac_heating_capacity,
+        csv_file
+):
     # Convert text input to float
     solar_size_kw = float(solar_size_kw)
     batt_size_kwh = float(batt_size_kwh)
+    ev_charging_present = True if ev_charging_present == "Yes" else False
+    hvac_heat_pump_present = True if hvac_heat_pump_present == "Yes" else False
+    hvac_heating_capacity = float(hvac_heating_capacity)
     
     # Get solar data from Palmetto API
     try:
-        palmetto_data = get_palmetto_data(address)
-        # plot_palmetto_data(palmetto_data)
+        palmetto_data = get_palmetto_data(
+            address,
+            solar_size_kw = solar_size_kw,
+            batt_size_kwh= batt_size_kwh,
+            ev_charging_present = ev_charging_present,
+            hvac_heat_pump_present = hvac_heat_pump_present,
+            hvac_heating_capacity = hvac_heating_capacity
+        )
+
     except Exception as e:
         print(f"Error getting Palmetto data: {e}")
         
@@ -49,6 +67,9 @@ iface = gr.Interface(
         gr.Textbox(label="Enter your address:", value="20 West 34th Street, New York, NY 10118"),
         gr.Textbox(label="Enter solar array size (kW):", value="1.0", type="text"),
         gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
+        gr.Dropdown(label="Do you have EV charging?",options = ["Yes", "No"], value="No", type="text"),
+        gr.Dropdown(label="Do you have a heat pump?", options = ["Yes", "No"], value="No", type="text"),
+        gr.Textbox(label="What is the heat pump capacity? (in kBtu/hr) ", value="0.0", type="text"),
         gr.File(label="Upload CSV File")
     ],
     outputs=[gr.Plot()],
