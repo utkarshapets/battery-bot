@@ -54,5 +54,3 @@ def get_palmetto_data(address: str) -> Dict[str, Any]:
             print(f"Response status code: {e.response.status_code}")
             print(f"Response body: {e.response.text}")
         raise
-
-def plot_palmetto_data(palmetto_data: json ):

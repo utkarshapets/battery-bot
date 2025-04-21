@@ -17,7 +17,7 @@ def process_submission(address, solar_size_kw, batt_size_kwh, csv_file):
     # Get solar data from Palmetto API
     try:
         palmetto_data = get_palmetto_data(address)
-        plot_palmetto_data(palmetto_data)
+        # plot_palmetto_data(palmetto_data)
     except Exception as e:
         print(f"Error getting Palmetto data: {e}")
         
