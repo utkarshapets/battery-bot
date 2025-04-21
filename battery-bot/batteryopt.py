@@ -7,6 +7,9 @@ import time
 import matplotlib.pyplot as plt
 
 from constants import TIMEZONE
+from dotenv import load_dotenv
+load_dotenv(dotenv_path = "../.env")  # load from .env
+
 
 def process_pge_meterdata(fname: str) -> pd.Series:
     header_row = None

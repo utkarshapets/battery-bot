@@ -19,6 +19,7 @@ cvxpy = "^1.4"
 # to run notebooks
 jupyter = "^1.0"
 ipykernel = "^6.27"
+python-dotenv = "^1.1.0"
 
 [build-system]
 requires = ["poetry-core"]
