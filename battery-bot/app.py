@@ -17,6 +17,7 @@ def process_submission(address, solar_size_kw, batt_size_kwh, csv_file):
     # Get solar data from Palmetto API
     try:
         palmetto_data = get_palmetto_data(address)
+        plot_palmetto_data(palmetto_data)
     except Exception as e:
         print(f"Error getting Palmetto data: {e}")
         
@@ -45,7 +46,7 @@ def process_submission(address, solar_size_kw, batt_size_kwh, csv_file):
 iface = gr.Interface(
     fn=process_submission,  # Function to call on submit
     inputs=[
-        gr.Textbox(label="Enter your address:", placeholder="123 Main St, City, State ZIP"),
+        gr.Textbox(label="Enter your address:", value="20 West 34th Street, New York, NY 10118"),
         gr.Textbox(label="Enter solar array size (kW):", value="1.0", type="text"),
         gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
         gr.File(label="Upload CSV File")

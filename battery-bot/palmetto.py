@@ -21,8 +21,6 @@ def get_palmetto_data(address: str) -> Dict[str, Any]:
     if not api_key:
         raise ValueError("PALMETTO_API_KEY environment variable is not set")
 
-    print(f"Token loaded: {api_key[:100]}...")  # Should not be None
-
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
@@ -55,4 +53,6 @@ def get_palmetto_data(address: str) -> Dict[str, Any]:
         if hasattr(e, 'response') and e.response is not None:
             print(f"Response status code: {e.response.status_code}")
             print(f"Response body: {e.response.text}")
-        raise 
+        raise
+
+def plot_palmetto_data(palmetto_data: json ):
