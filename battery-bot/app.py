@@ -67,8 +67,8 @@ iface = gr.Interface(
         gr.Textbox(label="Enter your address:", value="20 West 34th Street, New York, NY 10118"),
         gr.Textbox(label="Enter solar array size (kW):", value="1.0", type="text"),
         gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
-        gr.Dropdown(label="Do you have EV charging?",options = ["Yes", "No"], value="No", type="text"),
-        gr.Dropdown(label="Do you have a heat pump?", options = ["Yes", "No"], value="No", type="text"),
+        gr.Dropdown(label="Do you have EV charging?",choices = ["Yes", "No"], value="No", type="value"),
+        gr.Dropdown(label="Do you have a heat pump?", choices = ["Yes", "No"], value="No", type="value"),
         gr.Textbox(label="What is the heat pump capacity? (in kBtu/hr) ", value="0.0", type="text"),
         gr.File(label="Upload CSV File")
     ],
