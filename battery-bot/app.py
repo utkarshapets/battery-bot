@@ -7,8 +7,7 @@ from batteryopt import process_pge_meterdata, merge_solar_and_load_data, build_t
 from palmetto import get_palmetto_data
 
 from dotenv import load_dotenv
-
-load_dotenv()  # load from .env
+load_dotenv(dotenv_path = "../.env")  # load from .env
 
 def process_submission(address, solar_size_kw, batt_size_kwh, csv_file):
     # Convert text input to float

@@ -4,6 +4,8 @@ import json
 from typing import Dict, Any
 
 PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
+from dotenv import load_dotenv
+load_dotenv(dotenv_path = "../.env")  # load from .env
 
 def get_palmetto_data(address: str) -> Dict[str, Any]:
     """
@@ -15,25 +17,32 @@ def get_palmetto_data(address: str) -> Dict[str, Any]:
     Returns:
         Dict containing solar data from Palmetto
     """
-    load_dotenv()  # load from .env
     api_key = os.getenv("PALMETTO_API_KEY")
     if not api_key:
         raise ValueError("PALMETTO_API_KEY environment variable is not set")
-    
+
+    print(f"Token loaded: {api_key[:100]}...")  # Should not be None
+
     headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
+        "accept": "application/json",
+        "content-type": "application/json",
+        "X-API-Key": api_key
     }
-    
-    payload = {
-        "address": address,
-        "system_size": 1.0,  # Default to 1kW system
-        "azimuth": 180,      # Default to south-facing
-        "tilt": 30          # Default tilt angle
+
+    customer_payload = {
+        "parameters": {
+            "from_datetime": "2025-01-01T00:00:00",
+            "to_datetime": "2025-01-10T23:59:59",
+            "variables": ["consumption.electricity"],
+            "group_by": "month"
+        },
+        "location": {
+            "address": address
+        }
     }
     
     try:
-        response = requests.post(PALMETTO_API_URL, headers=headers, json=payload)
+        response = requests.post(PALMETTO_API_URL, headers=headers, json=customer_payload)
         response.raise_for_status()
         
         # Print the response for debugging
