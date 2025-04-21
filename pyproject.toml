@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "battery-bot"
+version = "0.0.1"
+description = "Battery optimization app using Gradio, pandas, pvlib, CVXPY, and Jupyter"
+authors = ["Eric Munsing, Martin O, Utkarsha Agwan, Anshul Goyal"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+# core libraries
+gradio = "^3.36.2"
+pandas = "^2.0"
+numpy = "^1.25"
+
+matplotlib = "^3.7"
+pvlib = "^0.11"
+cvxpy = "^1.4"
+
+# to run notebooks
+jupyter = "^1.0"
+ipykernel = "^6.27"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
