@@ -122,3 +122,71 @@ def run_optimization(site_data: pd.DataFrame, tariff: pd.DataFrame, batt_rt_eff=
                         'E': E[1:].value}).set_index(site_data.index)
     return res
 
+
+def optimization_usage_from_batt_solar_size(elec_usage:pd.Series,
+                                            tariff: pd.DataFrame,
+                                            solar_size_kw: float,
+                                            batt_size_kwh:float,
+                                            solar_series_per_kw: pd.Series = REF_SOLAR_DATA,
+                                            ) -> pd.DataFrame:
+    site_data = merge_solar_and_load_data(elec_usage, solar_size_kw * solar_series_per_kw)
+    battery_dispatch = run_optimization(site_data, tariff, batt_e_max=batt_size_kwh)
+    return battery_dispatch
+
+
+def get_daily_cost_from_pgrid(elec_usage:pd.Series,
+                              tariff: pd.DataFrame,
+                              ) -> float:
+    assert isinstance(elec_usage.index, pd.DatetimeIndex), "Must have a Datetimeindex"
+    p_grid_buy = elec_usage.clip(lower=0)
+    p_grid_sell = elec_usage.clip(upper=0)
+    total_cost = ((p_grid_buy @ tariff['px_buy']) + (p_grid_sell @ tariff['px_sell'])).sum()
+    elapsed_days = (elec_usage.index[-1] - elec_usage.index[0]).days
+    return total_cost / elapsed_days
+
+
+def get_daily_optimized_cost(elec_usage:pd.Series,
+                             tariff: pd.DataFrame,
+                             solar_size_kw: float,
+                             batt_size_kwh:float,
+                             solar_series_per_kw: pd.Series = REF_SOLAR_DATA,) -> float:
+    site_data = merge_solar_and_load_data(elec_usage, solar_size_kw * solar_series_per_kw)
+    res = run_optimization(site_data, tariff, batt_e_max=batt_size_kwh)
+
+    return get_daily_cost_from_pgrid(res['P_grid'], tariff)
+
+def simple_self_consumption(site_data: pd.DataFrame,
+                            tariff: pd.DataFrame,
+                            batt_rt_eff=0.85,
+                            batt_size_kwh=13.5,
+                            batt_p_max=5) -> pd.DataFrame:
+    assert site_data.index.equals(tariff.index), "Dataframes must have the same index"
+    site_data['net_load'] = site_data['load'] - site_data['solar']
+    dt = (site_data.index[1] - site_data.index[0]).total_seconds() / 3600  # Time step in hours
+    oneway_eff = np.sqrt(batt_rt_eff)
+    n = len(site_data)
+
+    # Initialize battery state of charge (SOC)
+    e_batt = np.zeros(n+1)
+    p_batt = np.zeros(n)
+    p_grid = np.zeros(n)
+
+    for i, (t, s) in enumerate(site_data.iterrows()):
+
+        if s['net_load'] < 0:  # Solar is generating
+            charge_power = min(-s['net_load'], batt_p_max, (batt_size_kwh - e_batt[i]) / (oneway_eff * dt))
+            p_batt[i] = -charge_power  # Negative for charging
+            e_batt[i+1] = e_batt[i] + charge_power * oneway_eff * dt
+            p_grid[i] = s['net_load'] - charge_power
+        else:  # Solar is not generating
+            # Discharge the battery (limited by power, efficiency, and capacity)
+            discharge_power = min(s['net_load'], batt_p_max, e_batt[i] * oneway_eff * dt)
+            p_batt[i] = discharge_power  # Positive for discharging
+            e_batt[i+1] = e_batt[i] - discharge_power / oneway_eff * dt
+            p_grid[i] = s['net_load'] + discharge_power
+
+    return pd.DataFrame({
+        'P_batt': p_batt,
+        'P_grid': p_grid,
+        'E_batt': e_batt[1:]
+    }, index=site_data.index)

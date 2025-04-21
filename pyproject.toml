@@ -11,7 +11,7 @@ python = "^3.9"
 gradio = "^3.36.2"
 pandas = "^2.0"
 numpy = "^1.25"
-
+pytest = "^7.4"
 matplotlib = "^3.7"
 pvlib = "^0.11"
 cvxpy = "^1.4"
