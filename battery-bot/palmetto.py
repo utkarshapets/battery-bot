@@ -7,7 +7,7 @@ PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
-def get_palmetto_data(address: str) -> Dict[str, Any]:
+def get_palmetto_data(address: str, granularity = "hour") -> Dict[str, Any]:
     """
     Get solar data from Palmetto API for a given address
     
@@ -29,10 +29,14 @@ def get_palmetto_data(address: str) -> Dict[str, Any]:
 
     customer_payload = {
         "parameters": {
-            "from_datetime": "2025-01-01T00:00:00",
-            "to_datetime": "2025-01-10T23:59:59",
-            "variables": ["consumption.electricity"],
-            "group_by": "month"
+            "from_datetime": "2024-04-01T00:00:00",
+            "to_datetime": "2025-04-01T00:00:00",
+            "variables": [
+                "consumption.electricity",
+                "consumption.electricity.plug_loads",
+                "emissions.electricity"
+            ],
+            "group_by": granularity
         },
         "location": {
             "address": address

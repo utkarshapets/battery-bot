@@ -51,7 +51,7 @@ iface = gr.Interface(
         gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
         gr.File(label="Upload CSV File")
     ],
-    outputs=gr.Plot(),  # Output a Matplotlib figure
+    outputs=[gr.Plot()],
 )
 
 # Launch the Gradio app
