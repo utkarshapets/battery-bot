@@ -1,0 +1,49 @@
+import requests
+import os
+import json
+from typing import Dict, Any
+
+PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
+
+def get_palmetto_data(address: str) -> Dict[str, Any]:
+    """
+    Get solar data from Palmetto API for a given address
+    
+    Args:
+        address (str): The address to get solar data for
+        
+    Returns:
+        Dict containing solar data from Palmetto
+    """
+    load_dotenv()  # load from .env
+    api_key = os.getenv("PALMETTO_API_KEY")
+    if not api_key:
+        raise ValueError("PALMETTO_API_KEY environment variable is not set")
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "address": address,
+        "system_size": 1.0,  # Default to 1kW system
+        "azimuth": 180,      # Default to south-facing
+        "tilt": 30          # Default tilt angle
+    }
+    
+    try:
+        response = requests.post(PALMETTO_API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        # Print the response for debugging
+        print("Palmetto API Response:")
+        print(json.dumps(response.json(), indent=2))
+        
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error making request to Palmetto API: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Response status code: {e.response.status_code}")
+            print(f"Response body: {e.response.text}")
+        raise 
