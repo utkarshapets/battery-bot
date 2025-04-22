@@ -51,7 +51,7 @@ def get_data(
             print(f"Error getting Palmetto data: {e}")
     else:
         solar_data = solar_size_kw * REF_SOLAR_DATA
-        elec_usage = process_pge_meterdata(csv_file.name)
+        elec_usage = process_pge_meterdata(electricity_csv_file.name)
 
     site_data = merge_solar_and_load_data(elec_usage, solar_data)
     tariff = build_tariff(site_data.index)
@@ -85,10 +85,6 @@ def process_submission(
     fig, ax = plt.subplots()
     final_week.plot(ax=ax)
     return fig
-
-
-
-
 
 
 if __name__ == '__main__':

@@ -96,6 +96,6 @@ def build_tariff(idx: pd.DatetimeIndex) -> pd.DataFrame:
     px_buy.loc[px_buy.between_time('16:00', '21:00').index] = 0.52
 
     px_sell = pd.Series(0.05, index=idx, name='px_sell')
-    px_sell.loc[px_sell.between_time('15:00', '20:00').index] = 0.08
+    px_sell.loc[px_sell.between_time('16:00', '22:00').index] = 0.20
 
     return pd.DataFrame({'px_buy': px_buy, 'px_sell': px_sell})

@@ -6,7 +6,7 @@ import numpy as np
 from batteryopt import (optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
                         get_daily_cost_from_pgrid, simple_self_consumption, run_endogenous_sizing_optimization)
 from utils import merge_solar_and_load_data, build_tariff
-from test.utils import elec_usage, get_test_root
+from test.utils import elec_usage, ng_cost, get_test_root
 import logging
 
 logger = logging.getLogger(__name__)
@@ -95,9 +95,16 @@ def test_all_scenarios():
     result_stats.to_csv(output_root / "result_stats.csv")
 
 
-def test_all_scenarios_incl_sizing():
-    solar_annualized_cost_per_kw = 3 / 20 * 1000
-    batt_annualized_cost_per_unit = 14000 / 10
+def test_all_scenarios_incl_sizing(ng_cost, elec_usage):
+    solar_annualized_cost_per_kw = 6 / 20 * 1000
+    batt_annualized_cost_per_unit = 8000 / 10
+    vmt_annual = 10000
+    ice_vehicle_fuel_cost_per_gal = 4.5
+    ice_vehicle_mpg = 30
+    duration = pd.DateOffset(days=30)
+    ice_vehicle_fuel_cost_annual = vmt_annual / ice_vehicle_mpg * ice_vehicle_fuel_cost_per_gal
+    ice_vehicle_fuel_cost_monthly = ice_vehicle_fuel_cost_annual / 12
+
     batt_rt_eff = 0.85
     batt_block_e_max = 13.5
     batt_p_max = 5
@@ -109,7 +116,12 @@ def test_all_scenarios_incl_sizing():
     infile = data_root / "scenario_data.csv"
     output_root = package_root / "data" / "output"
 
+    ng_total_cost = ng_cost.sum()
+    ng_cost_years = (ng_cost.index[-1] - ng_cost.index[0]).total_seconds() / (365 * 24 * 60 * 60)
+    ng_cost_monthly = ng_total_cost / ng_cost_years / 12
+
     load_df = load_palmetto_df(infile)
+    load_df = load_df.loc[load_df.index[0]:load_df.index[0] + duration]
     tariff = build_tariff(load_df.index)
     solar_series_per_kw = REF_SOLAR_DATA
     solar_data = merge_solar_and_load_data(load_df, solar_series_per_kw)['solar']
@@ -128,16 +140,27 @@ def test_all_scenarios_incl_sizing():
                                                  batt_p_max=batt_p_max,
                                                  integer_problem=integer_problem,
                                                  )
+
         opt_end = time.time()
         logger.info(f"Optimization done in {opt_end - opt_start} seconds")
         n_batts, s_size_kw, battery_dispatch = res
 
-        result_stats.loc[lbl, "energy_cost"] = get_daily_cost_from_pgrid(battery_dispatch['P_grid'], tariff) * 30
+        if "ev_False" in lbl:
+            result_stats.loc[lbl, "transport_fuel_cost"] = ice_vehicle_fuel_cost_monthly
+        else:
+            result_stats.loc[lbl, "transport_fuel_cost"] = 0
+
+        if "hvac_False" in lbl:
+            result_stats.loc[lbl, "natural_gas_bill"] = ng_cost_monthly
+        else:
+            result_stats.loc[lbl, "natural_gas_bill"] = 0
+
+        result_stats.loc[lbl, "electricity_cost"] = get_daily_cost_from_pgrid(battery_dispatch['P_grid'], tariff) * 30
         result_stats.loc[lbl, "equipment_cost"] = (n_batts * batt_annualized_cost_per_unit + s_size_kw * solar_annualized_cost_per_kw) / 365 * 30
         result_stats.loc[lbl, "solar_size_kw"] = s_size_kw
         result_stats.loc[lbl, "batt_size_kwh"] = n_batts * batt_block_e_max
 
         battery_dispatch.to_csv(output_root / (lbl + "_battery_dispatch.csv"), float_format="%.3f")
 
-    result_stats["total_cost"] = result_stats["energy_cost"] + result_stats["equipment_cost"]
+    result_stats["total_cost"] = result_stats["electricity_cost"] + result_stats["equipment_cost"]
     result_stats.to_csv(output_root / "result_stats.csv", float_format="%.2f")

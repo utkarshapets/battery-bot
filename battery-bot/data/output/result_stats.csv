@@ -1,5 +1,5 @@
-,energy_cost,equipment_cost,solar_size_kw,batt_size_kwh,total_cost
-load__ev_True__hvac_True,599.3161020230772,61.643835616438366,5.0,-0.0,660.9599376395156
-load__ev_True__hvac_False,246.0237869686819,36.986301369863014,3.0,-0.0,283.0100883385449
-load__ev_False__hvac_True,516.9434213076922,49.31506849315068,4.0,-0.0,566.2584898008429
-load__ev_False__hvac_False,164.2220353945064,24.65753424657534,2.0,-0.0,188.87956964108176
+,energy_cost,equipment_cost,solar_size_kw,batt_size_kwh,transport_fuel_cost,natural_gas_bill,electricity_cost,total_cost
+load__ev_True__hvac_True,,279.45205479452056,6.0,27.0,0.00,0.00,134.56,414.01454823132656
+load__ev_True__hvac_False,,164.3835616438356,4.0,13.5,0.00,66.36,36.11,200.49177395449766
+load__ev_False__hvac_True,,164.3835616438356,4.0,13.5,125.00,0.00,169.22,333.5993646250753
+load__ev_False__hvac_False,,139.72602739726028,3.0,13.5,125.00,66.36,-11.83,127.89354678453665
