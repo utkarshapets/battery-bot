@@ -1,18 +1,14 @@
 import pandas as pd
 import requests
 import os
-import json
-from typing import Dict, Any
-from bayou import get_dataframe_of_electric_intervals_for_customer
 import click
+
+from constants import FROM_DATETIME_PALMETTO_FUTURE, TO_DATETIME_PALMETTO_FUTURE
+from utils import process_pge_meterdata, series_to_palmetto_records
 
 PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
-
-FROM_DATETIME_PALMETTO_FUTURE = "2024-04-01T00:00:00" # Bayou data should all be strictly before this date
-TO_DATETIME_PALMETTO_FUTURE = "2025-04-01T00:00:00"
-
 
 def get_palmetto_data(
         address: str,
@@ -115,8 +111,8 @@ def get_palmetto_data(
         response.raise_for_status()
         
         # Print the response for debugging
-        print("Palmetto API Response:")
-        print(json.dumps(response.json(), indent=2))
+        # print("Palmetto API Response:")
+        # print(json.dumps(response.json(), indent=2))
         response_json = response.json()
         data = response_json['data']
         interval_data = pd.DataFrame(data['intervals'])
@@ -129,42 +125,24 @@ def get_palmetto_data(
         raise
 
 
-def get_electricity_from_bayou_and_format_for_palmetto(bayou_customer_id: int) -> list:
-    """
-    Gets the electricity usage in intervals for the customer specified by `bayou_customer_id`, filters it to only
-    include intervals that occured before FROM_DATETIME_PALMETTO_FUTURE, and then formats the data into a list
-    of dicts that can be used for arg `known_kwh_usage` in func get_palmetto_data().
-    :param bayou_customer_id: Bayou integer ID number for the customer whose electricity usage is requested.
-    :return: List of dicts where each dict represents an interval of electricity usage, formatted to be ingested by Palmetto API.
-    """
-    intervals_df = get_dataframe_of_electric_intervals_for_customer(customer_id=bayou_customer_id)
-    intervals_df = intervals_df.sort_values(by=['start'], ascending=True)
-
-    interval_end_timestamp_without_tz = intervals_df['end'].dt.tz_localize(None)
-    end_datetime = pd.to_datetime(FROM_DATETIME_PALMETTO_FUTURE)
-    intervals_df = intervals_df[interval_end_timestamp_without_tz < end_datetime].copy(deep=True)
-
-    intervals_df['from_datetime'] = intervals_df['start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
-    intervals_df['to_datetime'] = intervals_df['end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
-    intervals_df['variable'] = 'consumption.electricity'
-    intervals_df['value'] = intervals_df['net_electricity_consumption']
-
-    return intervals_df[['from_datetime', 'to_datetime', 'variable', 'value']].to_dict(orient='records')
-
-
 @click.command()
-@click.argument("output_file", type=click.Path, help="Output file to save the data")
-@click.argument("--address", prompt="Address", help="Address to get solar data for")
+@click.argument("output_file", type=click.Path())
+@click.option("--address", type=str, default=None, help="Address for which to estimate load")
+@click.option("--interval_data", type=click.Path(), default=None, help="PGE utility export")
 @click.option("--ev", type=bool, default=False, help="EV charging present")
 @click.option("--hvac", type=bool, default=False, help="HVAC heat pump present")
-@click.option("--known_kwh_usage", type=str, default=None, help="Known kWh usage")
 def get_palmetto_data_cli(
         address,
+        interval_data,
         ev,
         hvac,
         known_kwh_usage,
         output_file
 ):
+    assert address is not None or interval_data is not None, "Must provide either address or interval data"
+    if interval_data:
+        interval_data = series_to_palmetto_records(process_pge_meterdata(interval_data))
+
     granularity = "hour"
     solar_size_kw = 1.0
     battery_size_kwh = 0.0
@@ -178,6 +156,10 @@ def get_palmetto_data_cli(
         ev_charging_present=ev,
         hvac_heat_pump_present=hvac,
         hvac_heating_capacity=hvac_heating_capacity,
-        known_kwh_usage=known_kwh_usage
+        known_kwh_usage=interval_data
     )
     res.to_csv(output_file, index=False)
+
+
+if __name__ == "__main__":
+    get_palmetto_data_cli()

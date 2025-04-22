@@ -2,9 +2,9 @@ from solar import REF_SOLAR_DATA
 import pytest
 import pandas as pd
 import numpy as np
-from batteryopt import (process_pge_meterdata, merge_solar_and_load_data, build_tariff,
-                        optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
+from batteryopt import (optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
                         get_daily_cost_from_pgrid, simple_self_consumption)
+from utils import process_pge_meterdata, merge_solar_and_load_data, build_tariff
 from test.utils import elec_usage
 
 BATT_RT_EFF = 0.85

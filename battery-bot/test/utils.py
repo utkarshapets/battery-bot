@@ -2,7 +2,8 @@ import pandas as pd
 import os
 import pathlib
 import pytest
-from batteryopt import process_pge_meterdata
+from utils import process_pge_meterdata
+
 
 def get_test_root() -> pathlib.Path:
     return pathlib.Path(os.path.dirname(os.path.abspath(__file__)))

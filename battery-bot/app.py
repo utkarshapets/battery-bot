@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from solar import REF_SOLAR_DATA
-from batteryopt import process_pge_meterdata, merge_solar_and_load_data, build_tariff, run_optimization
+from batteryopt import run_optimization
+from utils import process_pge_meterdata, merge_solar_and_load_data, build_tariff
 from palmetto import get_palmetto_data
 
 from dotenv import load_dotenv

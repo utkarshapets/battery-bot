@@ -1,3 +1,5 @@
 
 TIMEZONE = 'US/Pacific'
 LATITUDE, LONGITUDE = 37.8, -122.4
+FROM_DATETIME_PALMETTO_FUTURE = "2024-04-01T00:00:00" # Bayou data should all be strictly before this date
+TO_DATETIME_PALMETTO_FUTURE = "2025-04-01T00:00:00"
