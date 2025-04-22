@@ -22,6 +22,7 @@ ipykernel = "^6.27"
 python-dotenv = "^1.1.0"
 ipdb = "^0.13.13"
 streamlit = "^1.24.0"
+plotly = "^5.17.1"
 
 [build-system]
 requires = ["poetry-core"]

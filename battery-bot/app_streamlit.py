@@ -1,15 +1,12 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import tempfile
-import time
+import pathlib
+import os
 import plotly.express as px
-from io import StringIO
-from solar import REF_SOLAR_DATA
 from app import get_data
-from batteryopt import run_optimization
-from utils import process_pge_meterdata, merge_solar_and_load_data, build_tariff
+
+def get_package_root() -> pathlib.Path:
+    return pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
 
 st.set_page_config(
     page_title="My App",
@@ -17,12 +14,13 @@ st.set_page_config(
 )
 
 # Streamlit app layout
-st.title("Electriplan?")
+st.title("BatteryBot 🤖⚡️")
 
 def read_csv_personal_usage():
-    
+
+
     # Hardcoded for now
-    file_path = "data\pge-e78ff14c-c8c0-11ec-8cc7-0200170a3297-DailyUsageData\pge_electric_usage_interval_data_Service 1_1_2024-02-01_to_2025-01-31.csv"
+    file_path = get_package_root() / "data" / "pge-e78ff14c-c8c0-11ec-8cc7-0200170a3297-DailyUsageData" / "pge_electric_usage_interval_data_Service 1_1_2024-02-01_to_2025-01-31.csv"
 
     class CSVFile:
         def __init__(self, name, content):
@@ -77,7 +75,7 @@ def run_scenario(
 
 
 # Create tabs
-tabs = st.tabs(["Home", "Your 10-year Electriplan"])
+tabs = st.tabs(["Home", "BatteryBot Insights 🤖"])
 
 with tabs[0]:
     st.header("Start")
@@ -116,18 +114,17 @@ def select_scenario(option_pv, option_bat, option_bev, option_hvac):
     return df_default, df       
 
 with tabs[1]:
-    st.header("Your 10-year Electriplan")
+    st.header("Your Battery Bot Analysis")
 
     col1, col2, col3 = st.columns([1, 2, 1])
 
     # Select Scenario
     with col1:
         st.subheader("Options")
-        option_pv = st.checkbox("Photovoltaik")
-        print("Whattt",option_pv)
+        option_pv = st.checkbox("Solar Power")
         option_bat = st.checkbox("Battery")
-        option_bev = st.checkbox("Electric Car")
-        option_hvac = st.checkbox("Heatpump")
+        option_bev = st.checkbox("Electric Vehicle")
+        option_hvac = st.checkbox("Heat Pump HVAC")
         df_default, df = select_scenario(
             option_pv,
             option_bat,
@@ -150,7 +147,7 @@ with tabs[1]:
         old_monthly_cost = df_default["cost"].sum()/12
         new_monthly_cost = df['cost'].sum()/12
         ten_year_savings = (new_monthly_cost - new_monthly_cost)*12*10 
-        st.metric(label="Todays Monthly Price", value=f"${old_monthly_cost:.2f}")
+        st.metric(label="Today's Monthly Price", value=f"${old_monthly_cost:.2f}")
         st.metric(label="New Monthly Price", value=f"${new_monthly_cost:.2f}")
         st.metric(label="Savings over 10 years", value=f"${ten_year_savings:.2f}")
 
