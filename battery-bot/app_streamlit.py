@@ -37,7 +37,6 @@ def run_scenario(
         batt_size_kwh = 0, 
         ev_charging_present = "No",
         hvac_heat_pump_present = "No",
-        kwh_price = 0.30, # Assumption
         address = "",
         hvac_heating_capacity = 0.0
 ):
@@ -68,7 +67,7 @@ def run_scenario(
     df_last_year = filter_last_year(df)
 
     #ATTENTION: is this the right column? The cost look not correct
-    df_last_year["cost"] = df_last_year['P_grid']*kwh_price
+    df_last_year["cost"] = df_last_year.apply(lambda x: x.P_grid* x.px_buy if x.P_grid > 0 else x.P_grid * x.px_sell, axis = 1) 
 
     return df_last_year
 
@@ -146,7 +145,7 @@ with tabs[1]:
     with col3:
         old_monthly_cost = df_default["cost"].sum()/12
         new_monthly_cost = df['cost'].sum()/12
-        ten_year_savings = (new_monthly_cost - new_monthly_cost)*12*10 
+        ten_year_savings = (old_monthly_cost - new_monthly_cost)*12*10 
         st.metric(label="Today's Monthly Price", value=f"${old_monthly_cost:.2f}")
         st.metric(label="New Monthly Price", value=f"${new_monthly_cost:.2f}")
         st.metric(label="Savings over 10 years", value=f"${ten_year_savings:.2f}")
