@@ -8,6 +8,9 @@ PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
+FROM_DATETIME_PALMETTO_FUTURE = "2024-04-01T00:00:00" # Bayou data should all be strictly before this date
+TO_DATETIME_PALMETTO_FUTURE = "2025-04-01T00:00:00"
+
 def get_palmetto_data(
         address: str,
         granularity = "hour",
@@ -39,8 +42,8 @@ def get_palmetto_data(
 
     customer_payload = {
         "parameters": {
-            "from_datetime": "2024-04-01T00:00:00",
-            "to_datetime": "2025-04-01T00:00:00",
+            "from_datetime": FROM_DATETIME_PALMETTO_FUTURE,
+            "to_datetime": TO_DATETIME_PALMETTO_FUTURE,
             "variables": [
                 "consumption.electricity",
                 "grid.electricity.import",
