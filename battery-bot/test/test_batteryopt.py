@@ -145,7 +145,7 @@ def test_all_scenarios_incl_sizing():
         result_stats.loc[lbl, "solar_size_kw"] = s_size_kw
         result_stats.loc[lbl, "batt_size_kwh"] = n_batts * batt_block_e_max
 
-        battery_dispatch.to_csv(output_root / (lbl + "_battery_dispatch.csv"))
+        battery_dispatch.to_csv(output_root / (lbl + "_battery_dispatch.csv"), float_format="%.3f")
 
     result_stats["total_cost"] = result_stats["energy_cost"] + result_stats["equipment_cost"]
-    result_stats.to_csv(output_root / "result_stats.csv")
+    result_stats.to_csv(output_root / "result_stats.csv", float_format="%.2f")

@@ -86,6 +86,6 @@ def test_all_variants():
             all_load_data[load_key] = load_data
 
     all_load_df = pd.DataFrame(all_load_data)
-    all_load_df.to_csv(OUTFILE)
+    all_load_df.to_csv(OUTFILE, float_format="%.3f")
     logger.info(f"Saved all load data to {OUTFILE}")
     print("Done")
