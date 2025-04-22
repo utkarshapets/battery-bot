@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 from solar import REF_SOLAR_DATA
 from batteryopt import run_optimization
 from utils import process_pge_meterdata, merge_solar_and_load_data, build_tariff
-from palmetto import get_palmetto_data
+try:
+    from palmetto import get_palmetto_data
+except TypeError:
+    get_palmetto_data = None
 
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
-def process_submission(
+
+def get_data(
         address,
         solar_size_kw,
         batt_size_kwh,
@@ -18,7 +22,7 @@ def process_submission(
         hvac_heat_pump_present,
         hvac_heating_capacity,
         csv_file
-):
+    ):
     # Convert text input to float
     solar_size_kw = float(solar_size_kw)
     batt_size_kwh = float(batt_size_kwh)
@@ -54,6 +58,27 @@ def process_submission(
     tariff = build_tariff(site_data.index)
     battery_dispatch = run_optimization(site_data, tariff, batt_e_max=batt_size_kwh)
     all_input = pd.concat([site_data, tariff, battery_dispatch], axis=1)
+    return all_input
+
+def process_submission(
+        address,
+        solar_size_kw,
+        batt_size_kwh,
+        ev_charging_present,
+        hvac_heat_pump_present,
+        hvac_heating_capacity,
+        csv_file
+):
+
+    all_input = get_data(       
+        address,
+        solar_size_kw,
+        batt_size_kwh,
+        ev_charging_present,
+        hvac_heat_pump_present,
+        hvac_heating_capacity,
+        csv_file)
+    
 
     final_week = all_input.loc[all_input.index[-1] - pd.DateOffset(days=7):]
 
@@ -63,20 +88,26 @@ def process_submission(
     return fig
 
 
-# Define the Gradio interface
-iface = gr.Interface(
-    fn=process_submission,  # Function to call on submit
-    inputs=[
-        gr.Textbox(label="Enter your address:", value="20 West 34th Street, New York, NY 10118"),
-        gr.Textbox(label="Enter solar array size (kW):", value="1.0", type="text"),
-        gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
-        gr.Dropdown(label="Do you have EV charging?",choices = ["Yes", "No"], value="No", type="value"),
-        gr.Dropdown(label="Do you have a heat pump?", choices = ["Yes", "No"], value="No", type="value"),
-        gr.Textbox(label="What is the heat pump capacity? (in kBtu/hr) ", value="0.0", type="text"),
-        gr.File(label="Upload CSV File")
-    ],
-    outputs=[gr.Plot()],
-)
 
-# Launch the Gradio app
-iface.launch()
+
+
+
+if __name__ == '__main__':
+
+    # Define the Gradio interface
+    iface = gr.Interface(
+        fn=process_submission,  # Function to call on submit
+        inputs=[
+            gr.Textbox(label="Enter your address:", value="20 West 34th Street, New York, NY 10118"),
+            gr.Textbox(label="Enter solar array size (kW):", value="1.0", type="text"),
+            gr.Textbox(label="Battery size (kWh):", value="13.5", type="text"),
+            gr.Dropdown(label="Do you have EV charging?",choices = ["Yes", "No"], value="No", type="value"),
+            gr.Dropdown(label="Do you have a heat pump?", choices = ["Yes", "No"], value="No", type="value"),
+            gr.Textbox(label="What is the heat pump capacity? (in kBtu/hr) ", value="0.0", type="text"),
+            gr.File(label="Upload CSV File")
+        ],
+        outputs=[gr.Plot()],
+    )
+
+    # Launch the Gradio app
+    iface.launch()
