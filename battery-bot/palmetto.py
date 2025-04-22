@@ -3,6 +3,7 @@ import requests
 import os
 import json
 from typing import Dict, Any
+from bayou import get_dataframe_of_electric_intervals_for_customer
 import click
 
 PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
@@ -126,6 +127,30 @@ def get_palmetto_data(
             print(f"Response status code: {e.response.status_code}")
             print(f"Response body: {e.response.text}")
         raise
+
+
+def get_electricity_from_bayou_and_format_for_palmetto(bayou_customer_id: int) -> list:
+    """
+    Gets the electricity usage in intervals for the customer specified by `bayou_customer_id`, filters it to only
+    include intervals that occured before FROM_DATETIME_PALMETTO_FUTURE, and then formats the data into a list
+    of dicts that can be used for arg `known_kwh_usage` in func get_palmetto_data().
+    :param bayou_customer_id: Bayou integer ID number for the customer whose electricity usage is requested.
+    :return: List of dicts where each dict represents an interval of electricity usage, formatted to be ingested by Palmetto API.
+    """
+    intervals_df = get_dataframe_of_electric_intervals_for_customer(customer_id=bayou_customer_id)
+    intervals_df = intervals_df.sort_values(by=['start'], ascending=True)
+
+    interval_end_timestamp_without_tz = intervals_df['end'].dt.tz_localize(None)
+    end_datetime = pd.to_datetime(FROM_DATETIME_PALMETTO_FUTURE)
+    intervals_df = intervals_df[interval_end_timestamp_without_tz < end_datetime].copy(deep=True)
+
+    intervals_df['from_datetime'] = intervals_df['start'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+    intervals_df['to_datetime'] = intervals_df['end'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+    intervals_df['variable'] = 'consumption.electricity'
+    intervals_df['value'] = intervals_df['net_electricity_consumption']
+
+    return intervals_df[['from_datetime', 'to_datetime', 'variable', 'value']].to_dict(orient='records')
+
 
 @click.command()
 @click.argument("output_file", type=click.Path, help="Output file to save the data")
