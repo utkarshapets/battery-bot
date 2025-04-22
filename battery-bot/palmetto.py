@@ -15,7 +15,8 @@ def get_palmetto_data(
         batt_size_kwh = 0.0,
         ev_charging_present = False,
         hvac_heat_pump_present = False,
-        hvac_heating_capacity = 0.0
+        hvac_heating_capacity = 0.0,
+        known_kwh_usage = None,
     ) -> Dict[str, Any]:
     """
     Get solar data from Palmetto API for a given address
@@ -100,6 +101,8 @@ def get_palmetto_data(
             }
         },
     }
+    if known_kwh_usage is not None:
+        customer_payload["consumption"]['actuals'] = known_kwh_usage
     
     try:
         response = requests.post(PALMETTO_API_URL, headers=headers, json=customer_payload)

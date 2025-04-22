@@ -28,6 +28,7 @@ customer_payload = {
     "location": {
         "address": "20 West 34th Street, New York, NY 10118"
     },
+    "consumption":{},
     "production": {
         "attributes": {
             "hypothetical": [
@@ -57,10 +58,25 @@ customer_payload = {
         }
     }
 }
+known_kwh_usage = [
+    {
+        "from_datetime": "2024-01-01T00:00:00",
+        "to_datetime": "2024-01-31T23:59:59",
+        "variable":"consumption.electricity",
+        "value": 758
+    },
+    {
+        "from_datetime": "2024-02-01T00:00:00",
+        "to_datetime": "2024-02-28T23:59:59",
+        "variable":"consumption.electricity",
+        "value": 708
+    }
+]
+
+customer_payload["consumption"]['actuals'] = known_kwh_usage
 
 response = requests.post(PALMETTO_API_URL, headers=headers, json=customer_payload)
 response_json = response.json()
-
 print("METADATA: ", response_json['meta'])
 
 data = response_json['data']

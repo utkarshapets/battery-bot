@@ -34,7 +34,9 @@ def process_submission(
             ev_charging_present = ev_charging_present,
             hvac_heat_pump_present = hvac_heat_pump_present,
             hvac_heating_capacity = hvac_heating_capacity
+            known_kwh_usage = None,
         )
+
 
     except Exception as e:
         print(f"Error getting Palmetto data: {e}")
