@@ -3,6 +3,7 @@ import requests
 import os
 import json
 from typing import Dict, Any
+import click
 
 PALMETTO_API_URL = "https://ei.palmetto.com/api/v0/bem/calculate"
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ load_dotenv(dotenv_path = "../.env")  # load from .env
 
 FROM_DATETIME_PALMETTO_FUTURE = "2024-04-01T00:00:00" # Bayou data should all be strictly before this date
 TO_DATETIME_PALMETTO_FUTURE = "2025-04-01T00:00:00"
+
 
 def get_palmetto_data(
         address: str,
@@ -20,7 +22,7 @@ def get_palmetto_data(
         hvac_heat_pump_present = False,
         hvac_heating_capacity = 0.0,
         known_kwh_usage = None,
-    ) -> Dict[str, Any]:
+    ) -> pd.DataFrame:
     """
     Get solar data from Palmetto API for a given address
     
@@ -124,3 +126,33 @@ def get_palmetto_data(
             print(f"Response status code: {e.response.status_code}")
             print(f"Response body: {e.response.text}")
         raise
+
+@click.command()
+@click.argument("output_file", type=click.Path, help="Output file to save the data")
+@click.argument("--address", prompt="Address", help="Address to get solar data for")
+@click.option("--ev", type=bool, default=False, help="EV charging present")
+@click.option("--hvac", type=bool, default=False, help="HVAC heat pump present")
+@click.option("--known_kwh_usage", type=str, default=None, help="Known kWh usage")
+def get_palmetto_data_cli(
+        address,
+        ev,
+        hvac,
+        known_kwh_usage,
+        output_file
+):
+    granularity = "hour"
+    solar_size_kw = 1.0
+    battery_size_kwh = 0.0
+    hvac_heating_capacity = 25.0
+
+    res = get_palmetto_data(
+        address=address,
+        granularity=granularity,
+        solar_size_kw=solar_size_kw,
+        batt_size_kwh=battery_size_kwh,
+        ev_charging_present=ev,
+        hvac_heat_pump_present=hvac,
+        hvac_heating_capacity=hvac_heating_capacity,
+        known_kwh_usage=known_kwh_usage
+    )
+    res.to_csv(output_file, index=False)

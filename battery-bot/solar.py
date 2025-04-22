@@ -1,6 +1,11 @@
 import pandas as pd
 import pvlib
+import pathlib
 from constants import LATITUDE, LONGITUDE, TIMEZONE
+import os
+
+def get_package_root() -> pathlib.Path:
+    return pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
 
 def get_expected_solar_output(latitude: float, longitude: float, start_yr: int, end_yr: int, timezone:str, surface_tilt: float | None =None, 
                               surface_azimuth: float=180) -> pd.Series:
@@ -22,7 +27,7 @@ def get_expected_solar_output(latitude: float, longitude: float, start_yr: int, 
     
 
 def get_or_cache_weather_data(latitude: float, longitude: float, start_yr: int, end_yr: int, timezone: str) -> pd.Series:
-    cache_file = f'data/weather_{latitude}_{longitude}_{start_yr}_{end_yr}.csv'
+    cache_file = get_package_root() / f'data/weather_{latitude}_{longitude}_{start_yr}_{end_yr}.csv'
     try:
         weather_data = pd.read_csv(cache_file, index_col=0, parse_dates=[0]).squeeze()
         weather_data.index = pd.DatetimeIndex(weather_data.index, tz=pd.Timestamp(weather_data.index[0]).tzinfo)

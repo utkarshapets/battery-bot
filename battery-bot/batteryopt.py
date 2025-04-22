@@ -172,18 +172,17 @@ def simple_self_consumption(site_data: pd.DataFrame,
     p_grid = np.zeros(n)
 
     for i, (t, s) in enumerate(site_data.iterrows()):
-
         if s['net_load'] < 0:  # Solar is generating
-            charge_power = min(-s['net_load'], batt_p_max, (batt_size_kwh - e_batt[i]) / (oneway_eff * dt))
-            p_batt[i] = -charge_power  # Negative for charging
-            e_batt[i+1] = e_batt[i] + charge_power * oneway_eff * dt
+            charge_power = -min(-s['net_load'], batt_p_max, (batt_size_kwh - e_batt[i]) / (oneway_eff * dt))
+            p_batt[i] = charge_power
+            e_batt[i+1] = e_batt[i] - charge_power * oneway_eff * dt
             p_grid[i] = s['net_load'] - charge_power
         else:  # Solar is not generating
             # Discharge the battery (limited by power, efficiency, and capacity)
             discharge_power = min(s['net_load'], batt_p_max, e_batt[i] * oneway_eff * dt)
             p_batt[i] = discharge_power  # Positive for discharging
             e_batt[i+1] = e_batt[i] - discharge_power / oneway_eff * dt
-            p_grid[i] = s['net_load'] + discharge_power
+            p_grid[i] = s['net_load'] - discharge_power
 
     return pd.DataFrame({
         'P_batt': p_batt,

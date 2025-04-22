@@ -2,20 +2,16 @@ from solar import REF_SOLAR_DATA
 import pytest
 import pandas as pd
 import numpy as np
-from batteryopt import (process_pge_meterdata, merge_solar_and_load_data, build_tariff, run_optimization,
-                        get_daily_optimized_cost, optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
+from batteryopt import (process_pge_meterdata, merge_solar_and_load_data, build_tariff,
+                        optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
                         get_daily_cost_from_pgrid, simple_self_consumption)
+from test.utils import elec_usage
 
-REF_LOAD_DATA_FILE = "data/pge-e78ff14c-c8c0-11ec-8cc7-0200170a3297-DailyUsageData/pge_electric_usage_interval_data_Service 1_1_2024-02-01_to_2025-01-31.csv"
 BATT_RT_EFF = 0.85
 BATT_SIZE_EMAX = 13.5
 BATT_SIZE_PMAX = 5.0
 SOLAR_SIZE_KW = 1.0
 
-@pytest.fixture
-def elec_usage(csv_file=REF_LOAD_DATA_FILE) -> pd.Series:
-    s = process_pge_meterdata(csv_file)
-    return s
 
 def test_elec_usage(elec_usage):
     assert elec_usage is not None, "Electric usage data should not be None"
@@ -57,6 +53,6 @@ def test_simple_self_consumption(elec_usage):
                                         batt_rt_eff=BATT_RT_EFF,
                                         batt_size_kwh=BATT_SIZE_EMAX,
                                         batt_p_max=BATT_SIZE_PMAX)
-
+    sc_data = simple_sc.join(site_data)
     average_daily_cost = get_daily_cost_from_pgrid(simple_sc['P_grid'], tariff)
     assert average_daily_cost >= 0, "Total cost should be non-negative"
