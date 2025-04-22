@@ -18,7 +18,6 @@ st.title("BatteryBot 🤖⚡️")
 
 def read_csv_personal_usage():
 
-
     # Hardcoded for now
     file_path = get_package_root() / "data" / "pge-e78ff14c-c8c0-11ec-8cc7-0200170a3297-DailyUsageData" / "pge_electric_usage_interval_data_Service 1_1_2024-02-01_to_2025-01-31.csv"
 

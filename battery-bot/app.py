@@ -13,6 +13,7 @@ except TypeError:
 from dotenv import load_dotenv
 load_dotenv(dotenv_path = "../.env")  # load from .env
 
+TRY_PALMETTO = False
 
 def get_data(
         address,
@@ -21,7 +22,8 @@ def get_data(
         ev_charging_present,
         hvac_heat_pump_present,
         hvac_heating_capacity,
-        csv_file
+        electricity_csv_file=None,
+        natural_gas_csv_file=None,
     ):
     # Convert text input to float
     solar_size_kw = float(solar_size_kw)
@@ -31,28 +33,25 @@ def get_data(
     hvac_heating_capacity = float(hvac_heating_capacity)
     
     # Get solar data from Palmetto API
-    try:
-        palmetto_data = get_palmetto_data(
-            address,
-            solar_size_kw = solar_size_kw,
-            batt_size_kwh= batt_size_kwh,
-            ev_charging_present = ev_charging_present,
-            hvac_heat_pump_present = hvac_heat_pump_present,
-            hvac_heating_capacity = hvac_heating_capacity,
-            known_kwh_usage = None,
-        )
-
-
-    except Exception as e:
-        print(f"Error getting Palmetto data: {e}")
-        
-    # TODO: Process palmetto_data to get solar production data
-    # For now, we'll use the existing REF_SOLAR_DATA
-    solar_data = solar_size_kw * REF_SOLAR_DATA
-    
-    
-    # Read CSV file into a DataFrame
-    elec_usage = process_pge_meterdata(csv_file.name)
+    if TRY_PALMETTO:
+        try:
+            palmetto_records = get_palmetto_data(
+                address,
+                solar_size_kw = solar_size_kw,
+                batt_size_kwh= batt_size_kwh,
+                ev_charging_present = ev_charging_present,
+                hvac_heat_pump_present = hvac_heat_pump_present,
+                hvac_heating_capacity = hvac_heating_capacity,
+                known_kwh_usage = None,
+            )
+            df = pd.DataFrame.from_records(palmetto_records).set_index(["from_datetime", "variable"])["value"].unstack("variable")
+            load_data = df["consumption.electricity"]
+            elec_usage = load_data.rename('load')
+        except Exception as e:
+            print(f"Error getting Palmetto data: {e}")
+    else:
+        solar_data = solar_size_kw * REF_SOLAR_DATA
+        elec_usage = process_pge_meterdata(csv_file.name)
 
     site_data = merge_solar_and_load_data(elec_usage, solar_data)
     tariff = build_tariff(site_data.index)

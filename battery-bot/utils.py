@@ -39,11 +39,11 @@ def series_to_palmetto_records(s: pd.Series) -> list[dict]:
 
 
 
-def process_pge_meterdata(fname: str) -> pd.Series:
+def process_pge_meterdata(fname: str, extract_col='USAGE (kWh)') -> pd.Series:
     header_row = None
     with open(fname, 'r') as f:
         for i, line in enumerate(f):
-            if line.startswith("TYPE,DATE,START TIME,END TIME,USAGE (kWh),COST,NOTES"):
+            if line.startswith("TYPE,DATE,START TIME,END TIME"):
                 header_row = i
                 break
     if header_row is None:
@@ -53,12 +53,12 @@ def process_pge_meterdata(fname: str) -> pd.Series:
     sample_consumption['Datetime'] = pd.DatetimeIndex(sample_consumption['Datetime']).tz_localize('US/Pacific', ambiguous='NaT', nonexistent='NaT')
     sample_consumption = sample_consumption[sample_consumption['Datetime'].notnull()]
     sample_consumption = sample_consumption.set_index('Datetime')
-    elec_usage = sample_consumption['USAGE (kWh)'].rename('load')
+    s = sample_consumption[extract_col].astype(str).str.replace('$', '').astype(float).rename('load')
 
-    elec_end_date = elec_usage.index[-1]
-    if elec_usage.index[0] < (elec_end_date - pd.DateOffset(years=1)):
-        elec_usage = elec_usage.loc[elec_end_date - pd.DateOffset(years=1):elec_end_date]
-    return elec_usage
+    end_date = s.index[-1]
+    if s.index[0] < (end_date - pd.DateOffset(years=1)):
+        s = s.loc[end_date - pd.DateOffset(years=1):end_date]
+    return s
 
 
 def merge_solar_and_load_data(elec_usage: pd.Series, solar_ac_estimate: pd.Series) -> pd.DataFrame:

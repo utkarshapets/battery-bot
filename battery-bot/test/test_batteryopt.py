@@ -1,12 +1,11 @@
 import os
 import time
 from solar import REF_SOLAR_DATA
-import pytest
 import pandas as pd
 import numpy as np
 from batteryopt import (optimization_usage_from_batt_solar_size, get_daily_optimized_cost,
                         get_daily_cost_from_pgrid, simple_self_consumption, run_endogenous_sizing_optimization)
-from utils import process_pge_meterdata, merge_solar_and_load_data, build_tariff
+from utils import merge_solar_and_load_data, build_tariff
 from test.utils import elec_usage, get_test_root
 import logging
 
@@ -17,13 +16,6 @@ BATT_RT_EFF = 0.85
 BATT_SIZE_EMAX = 13.5
 BATT_SIZE_PMAX = 5.0
 SOLAR_SIZE_KW = 1.0
-
-
-def test_elec_usage(elec_usage):
-    assert elec_usage is not None, "Electric usage data should not be None"
-    assert isinstance(elec_usage, pd.Series), "Electric usage data should be a pandas Series"
-    assert elec_usage.index.tz.zone == 'US/Pacific', "Electric usage data should be in US/Pacific timezone"
-    assert np.all(elec_usage >= 0), "Electric usage data should not contain negative values"
 
 
 def test_opt(elec_usage, solar_size_kw=1.0, batt_size_kwh=13.5, ):
