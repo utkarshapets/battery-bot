@@ -162,5 +162,5 @@ def test_all_scenarios_incl_sizing(ng_cost, elec_usage):
 
         battery_dispatch.to_csv(output_root / (lbl + "_battery_dispatch.csv"), float_format="%.3f")
 
-    result_stats["total_cost"] = result_stats["electricity_cost"] + result_stats["equipment_cost"]
+    result_stats["total_cost"] = result_stats[["electricity_cost", "equipment_cost", "transport_fuel_cost", "natural_gas_bill"]].sum(axis=1)
     result_stats.to_csv(output_root / "result_stats.csv", float_format="%.2f")
