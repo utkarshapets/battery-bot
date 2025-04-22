@@ -5,6 +5,7 @@ import numpy as np
 import tempfile
 import time
 import plotly.express as px
+from io import StringIO
 from solar import REF_SOLAR_DATA
 from app import get_data
 from batteryopt import run_optimization
@@ -19,7 +20,6 @@ st.set_page_config(
 st.title("Electriplan?")
 
 def read_csv_personal_usage():
-    from io import StringIO
     
     # Hardcoded for now
     file_path = "data\pge-e78ff14c-c8c0-11ec-8cc7-0200170a3297-DailyUsageData\pge_electric_usage_interval_data_Service 1_1_2024-02-01_to_2025-01-31.csv"
