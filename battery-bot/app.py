@@ -33,7 +33,7 @@ def process_submission(
             batt_size_kwh= batt_size_kwh,
             ev_charging_present = ev_charging_present,
             hvac_heat_pump_present = hvac_heat_pump_present,
-            hvac_heating_capacity = hvac_heating_capacity
+            hvac_heating_capacity = hvac_heating_capacity,
             known_kwh_usage = None,
         )
 
